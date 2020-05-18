@@ -1,0 +1,51 @@
+<!doctype html>
+<html>
+    <head>
+        <title>Spy Race</title>
+        <link rel="stylesheet" type="text/css" href="css/style.css">
+        <script src="/socket.io/socket.io.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    </head>
+    <body>
+        <div id="join_create_div">
+            <p>
+                <input type="text" placeholder="nickname" id="nickname_input" />
+            </p>
+            <p>
+                <input type="text" placeholder="room" id="room_input" />
+            </p>
+            <p>
+                <input type="text" placeholder="password" id="password_input" />
+            </p>
+            <p>
+                <button id="join_btn">Join</button>
+                <button id="create_btn">Create</button>
+            </p> 
+        </div>
+
+        <div id="login_info_div">
+            <p>
+                room: <span></span>
+            </p>
+            <p>
+                nickname: <span></span>
+            </p>
+            <p>
+                password: <span></span>
+            </p>
+        </div>
+
+        <div id="game_div">
+            <p>
+                <span id="users_display"></span>
+            </p>
+            <canvas id="game_canvas" width="640" height="480"></canvas>
+            <p>
+                <button id="start_game_btn">start game</button>
+            </p>
+        </div>
+
+        <script language="javascript" type="text/javascript" src="js/helper.js"></script>
+
+    </body>
+</html>
