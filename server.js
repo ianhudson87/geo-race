@@ -6,7 +6,7 @@ var path = require('path');
 var port = process.env.PORT || 3000;
 
 // global variables
-const tickrate = 3
+const tickrate = 0.5
 const ticktime = 1000/tickrate
 const num_racers = 10 // number of bots+humans
 const bot_movement_toggle_chance = 0.1 // chance that bot changes walking->stop or vice versa each tick
@@ -25,7 +25,8 @@ app.use(express.static(htmlPath));
 // object of objects
 // first object is all the rooms
 // second object is password, users and other stuff
-/*
+rooms_obj = {}
+/* EXAMPLE
 rooms_obj = {
   room1: {
     password: "pass1",
@@ -50,8 +51,6 @@ rooms_obj = {
   }
 }
 */
-
-rooms_obj = {}
 
 
 io.on('connection', function(socket){
@@ -147,7 +146,6 @@ io.on('connection', function(socket){
 
     // STARTING GAME
     socket.on("start_game", ()=>{
-
         // find room the user is in
         for(let room_name in rooms_obj){
             // room_name is a string (key)
@@ -192,6 +190,22 @@ io.on('connection', function(socket){
     })
 
     // GAME ACTIONS
+    socket.on("change_movement", (data)=>{
+        console.log("CHANGE MOVEMENT", data.move_type)
+        // get which room player is in and which index they are
+        for(let room_name in rooms_obj){
+            room = rooms_obj[room_name]
+            if(!room.game_started){
+                // game is not started. therefore don't need to check this room to change movement states
+                continue
+            }
+            let player_index = room.socketids.indexOf(socket.id)
+            if(player_index>-1){
+                // player is in this room and index is index of player
+                room.game_state.player_movement_state[player_index] = data.move_type
+            }
+        }
+    })
 
 });
 
@@ -282,6 +296,18 @@ function sample_no_replacement(sample_size, n){
 function bernoulli(p){
     // returns true with probability p
     return (Math.random() < p)
+}
+
+function get_room_of_user(socket){
+    // input socket. output room object that user is in
+    for(let room_name in rooms_obj){
+        room = rooms_obj[room_name]
+        if(room.socketids.includes(socket.id)){
+            return room
+            break
+        }
+    }
+    return null
 }
 
 
