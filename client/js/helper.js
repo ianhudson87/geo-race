@@ -2,7 +2,7 @@ var socket = io.connect();
 
 //////////////////////////////////
 // GAME SETTINGS
-const tickrate = 2
+const tickrate = 5
 const ticktime = 1000/tickrate
 const canvas_width = 640
 const canvas_height = 480
@@ -36,7 +36,7 @@ var game_canvas = document.getElementById("game_canvas")
 var ctx = game_canvas.getContext("2d");
 
 var racer_spacing = 0 // changes when game starts. vert spacing in px of the racers
-var racer_size = 10 // size of racer in px
+const racer_size = 10 // size of racer in px
 
 ctx.fillStyle = "#FF0000";
 ctx.fillRect(0, 0, 150, 75);
@@ -116,7 +116,7 @@ socket.on("update_users_display", (data)=>{
 // update game data handler
 socket.on("update_game_state", (data)=>{
     game_state = data.game_state
-    console.log(data.game_state)
+    // console.log(data.game_state)
 
     // order the racer positions based on how they are lined up
     let bot_index = 0
@@ -145,7 +145,7 @@ socket.on("update_game_state", (data)=>{
 socket.on("game_over", (data)=>{
     if(data.success){
         alert("Game Over. Winner: " + data.winner_name)
-        console.log(data)
+        // console.log(data)
     }
 })
 
@@ -233,6 +233,7 @@ function update_display(){
     display_xhairs()
 
     // draw finish line
+    display_finish()
 }
 
 function display_racers(){
@@ -260,6 +261,10 @@ function display_xhairs(){
     })
 }
 
+function display_finish(){
+    draw_line(race_win_position + racer_size*0.5, 0, race_win_position + racer_size*0.5, canvas_height)
+}
+
 
 // shape drawing
 function draw_square(center_x, center_y, side_length, color){
@@ -280,4 +285,11 @@ function draw_circle(center_x, center_y, radius, color){
     ctx.beginPath()
     ctx.arc(center_x, center_y, radius, 0, 2 * Math.PI)
     ctx.stroke()
+}
+
+function draw_line(start_x, start_y, end_x, end_y){
+    ctx.beginPath();
+    ctx.moveTo(start_x, start_y);
+    ctx.lineTo(end_x, end_y);
+    ctx.stroke();
 }

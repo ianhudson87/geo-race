@@ -6,7 +6,7 @@ var path = require('path');
 var port = process.env.PORT || 3000;
 
 // global variables
-const tickrate = 2
+const tickrate = 5
 const ticktime = 1000/tickrate
 const num_racers = 10 // number of bots+humans
 const bot_movement_toggle_chance = 0.1 // chance that bot changes walking->stop or vice versa each tick
@@ -100,7 +100,7 @@ io.on('connection', function(socket){
             })
         }
 
-        console.log(rooms_obj)
+        // console.log(rooms_obj)
     })
 
     // JOINING ROOM
@@ -155,7 +155,7 @@ io.on('connection', function(socket){
                 msg: "couldn't join room, room doesn't exist"
             })
         }
-        console.log(rooms_obj)
+        // console.log(rooms_obj)
     })
 
     // STARTING GAME
@@ -165,7 +165,7 @@ io.on('connection', function(socket){
             // room_name is a string (key)
             let room = rooms_obj[room_name]
 
-            console.log(room.socketids)
+            // console.log(room.socketids)
 
             if(room.socketids.includes(socket.id)){
                 // user is in this room
@@ -190,7 +190,7 @@ io.on('connection', function(socket){
                             num_racers: num_racers,
                             race_win_position: race_win_position
                         })
-                        console.log(room.game_state)
+                        // console.log(room.game_state)
                     }
                     else{
                         socket.emit("start_game_res", {
@@ -313,7 +313,7 @@ function game_loop() {
             game_state['bot_movement_state'] = game_state['bot_movement_state'].map((val)=>{
                 if(bernoulli(bot_movement_toggle_chance)){
                     // flip bot movement state
-                    console.log('here')
+                    // console.log('here')
                     return (val+1)%2
                 }
                 return val
@@ -339,7 +339,7 @@ function game_loop() {
                 end_game(room, winner_index, "A bot won, you losers", room_name)
             }
 
-            console.log(game_state)
+            // console.log(game_state)
         }
     }
 }
