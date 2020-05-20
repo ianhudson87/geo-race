@@ -7,6 +7,9 @@ const ticktime = 1000/tickrate
 const canvas_width = 640
 const canvas_height = 480
 
+const width_multiplier = 2
+const height_multiplier = 1
+
 const movement_stop_state = 0 // state for not moving
 const movement_walk_state = 1 // state for not moving
 const movement_run_state = 2 // state for not moving
@@ -242,7 +245,7 @@ function display_racers(){
         // determine if racer is alive
         racer_color = game_state.racers_shot.includes(racer_index) ? racer_dead_color : racer_alive_color
 
-        draw_square(racer_pos, racer_spacing*(racer_index+0.5), racer_size, racer_color)
+        draw_square(racer_pos*width_multiplier, racer_spacing*(racer_index+0.5), racer_size, racer_color)
     })
 }
 
@@ -256,13 +259,14 @@ function display_xhairs(){
         // player_index is the index of the player with the xhair
         let racer_pos = ordered_racer_pos[xhair_pos]
         let xhair_color = player_colors[player_index]
-        draw_circle(racer_pos, racer_spacing*(xhair_pos+0.5), 10, xhair_color)
+        draw_circle(racer_pos*width_multiplier, racer_spacing*(xhair_pos+0.5), 10, xhair_color)
         
     })
 }
 
 function display_finish(){
-    draw_line(race_win_position + racer_size*0.5, 0, race_win_position + racer_size*0.5, canvas_height)
+    draw_line((race_win_position + racer_size*0.5)*width_multiplier, 0,
+    (race_win_position + racer_size*0.5)*width_multiplier, canvas_height)
 }
 
 

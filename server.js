@@ -6,17 +6,21 @@ var path = require('path');
 var port = process.env.PORT || 3000;
 
 // global variables
-const tickrate = 10
+const tickrate = 5
 const ticktime = 1000/tickrate
 const num_racers = 10 // number of bots+humans
 const bot_movement_toggle_chance = 0.1 // chance that bot changes walking->stop or vice versa each tick
-const race_win_position = 150 // position that is the finish line
+const race_win_position = 300 // position that is the finish line
 const race_initial_position = 10 // position racers start out at
 const initial_bullets = 1 // number of bullets players start out with
 
 const movement_stop_state = 0 // state for not moving
 const movement_walk_state = 1 // state for not moving
 const movement_run_state = 2 // state for not moving
+
+const stop_speed = 0
+const walk_speed = 1
+const run_speed = 3
 
 const xhair_up_act = 0 // action type for moving xhair up
 const xhair_down_act = 1 // action type for moving xhair down
@@ -217,11 +221,18 @@ io.on('connection', function(socket){
     })
 
     socket.on("xhair_action", (data)=>{
-        let data2 = get_room_and_index_of_user(socket) // data2 has room and player_index of user
-        let room = data2.room
-        let game_state = room.game_state
-        let player_index = data2.player_index
-        let current_xhair_pos = room.game_state.player_crosshair[player_index] // index of racer xhair is on
+        try{
+            var data2 = get_room_and_index_of_user(socket) // data2 has room and player_index of user
+            var room = data2.room
+            var game_state = room.game_state
+            var player_index = data2.player_index
+            var current_xhair_pos = room.game_state.player_crosshair[player_index] // index of racer xhair is on
+        }
+        catch(err){
+            // something not initialized. jump out of function
+            return
+        }
+        
 
         switch(data.action_type){
             case xhair_up_act:
@@ -305,6 +316,7 @@ function game_loop() {
                 else{
                     // raver has not been shot
                     let movement_state = game_state.bot_movement_state[index]
+                    delta_pos = get_delta_position(movement_state)
                     return val + movement_state
                 }
             })
@@ -442,7 +454,16 @@ function end_game(room, winner_index, winner_name, room_name){
     })
 }
 
-
+function get_delta_position(movement_state){
+    switch(movement_state){
+        case movement_stop_state:
+            return stop_speed
+        case movement_walk_state:
+            return walk_speed
+        case movement_run_state:
+            return run_speed
+    }
+}
 
 http.listen(port, function(){
   console.log('listening on *:' + port)
