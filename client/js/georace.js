@@ -28,7 +28,12 @@ var num_racers = 0 // will change when game starts
 var game_state = {} // USE THIS TO KEEP TRACK OF ALL GAME DATA. Same as server game_state
 var race_win_position = 0 // change when game starts
 var ordered_racer_pos = [] // racer positions in order
-var one_key_down = false // keeps track if a key is down or not
+
+var walk_key_pressed = false
+var run_key_pressed = false
+var xhair_up_key_pressed = false
+var xhair_down_key_pressed = false
+var shoot_key_pressed = false
 
 
 //////////////////////////////////
@@ -100,6 +105,7 @@ socket.on("start_game_res", (data)=>{
         num_racers = data.num_racers
         racer_spacing = canvas_height/(num_racers+1)
         race_win_position = data.race_win_position
+        document.getElementById("start_game_btn").blur()
         alert(data.msg)
     }
     else{
@@ -130,7 +136,6 @@ socket.on("update_game_state", (data)=>{
 
             let racer_position = game_state.player_positions[player_positions_index]
             ordered_racer_pos[i] = racer_position
-
         }
         else{
             // i is at position of bot. use bot_index counter
@@ -141,7 +146,6 @@ socket.on("update_game_state", (data)=>{
             bot_index++
         }
     }
-
 })
 
 // handler for when game is over
@@ -158,54 +162,91 @@ var game_display = setInterval(update_display, ticktime);
 /////////////////////////////////
 // handle game actions: z=walk; x=run; o=xhairup; l=xhairdown; enter=shoot
 $(document).on("keyup keydown", (e) => {
-    if(!one_key_down && e.type=="keydown"){
-        // no keys are down and key is pressed
+    if(e.type=="keydown"){
+        // key is pressed
         switch(e.which){
             case 90:
-                // z down
-                socket.emit("change_movement", {
-                    move_type: movement_walk_state // walk
-                })
+                // z down. walk
+                if(!walk_key_pressed){
+                    socket.emit("change_movement", {
+                        move_type: movement_walk_state
+                    })
+                    walk_key_pressed = true
+                }
                 break
             case 88:
-                // x down
-                socket.emit("change_movement", {
-                    move_type: movement_run_state // run
-                })
+                // x down. run
+                if(!run_key_pressed){
+                    socket.emit("change_movement", {
+                        move_type: movement_run_state
+                    })
+                    run_key_pressed = true
+                }
                 break
             case 79:
-                // o down
-                socket.emit("xhair_action", {
-                    action_type: xhair_up_act // xhair up
-                })
+                // o down. xhair up
+                if(!xhair_up_key_pressed){
+                    socket.emit("xhair_action", {
+                        action_type: xhair_up_act
+                    })
+                    xhair_up_key_pressed = true
+                }
                 break
             case 76:
-                // l down
-                socket.emit("xhair_action", {
-                    action_type: xhair_down_act // xhair down
-                })
+                // l down. xhair down
+                if(!xhair_down_key_pressed){
+                    socket.emit("xhair_action", {
+                        action_type: xhair_down_act
+                    })
+                    xhair_down_key_pressed = true
+                }
                 break
             case 13:
-                // enter down
-                socket.emit("xhair_action", {
-                    action_type: xhair_shoot_act // xhair shoot
-                })
+                // enter down. shoot
+                if(!shoot_key_pressed){
+                    socket.emit("xhair_action", {
+                        action_type: xhair_shoot_act
+                    })
+                    shoot_key_pressed = true
+                }
                 break
         }
 
         // set key pressed flag
         one_key_down = true
     }
-    else if(one_key_down && e.type=="keyup"){
-        // key is down and key has been released
+    else if(e.type=="keyup"){
+        // key has been released
         switch(e.which){
             case 90:
                 // z up
+                walk_key_pressed = false
+                if(!walk_key_pressed && !run_key_pressed){
+                    socket.emit("change_movement", {
+                        move_type: movement_stop_state // stop walk/run
+                    })
+                }
+                break
             case 88:
                 // x up
-                socket.emit("change_movement", {
-                    move_type: movement_stop_state // stop walk/run
-                })
+                run_key_pressed = false
+                if(!walk_key_pressed && !run_key_pressed){
+                    socket.emit("change_movement", {
+                        move_type: movement_stop_state // stop walk/run
+                    })
+                }
+                break
+            case 79:
+                // o up
+                xhair_up_key_pressed = false
+                break
+            case 76:
+                // l up
+                xhair_down_key_pressed = false
+                break
+            case 13:
+                // enter up
+                shoot_key_pressed = false
                 break
         }
 

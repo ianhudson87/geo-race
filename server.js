@@ -302,19 +302,31 @@ function game_loop() {
             // update bot positions
             game_state['bot_positions'] = game_state['bot_positions'].map((val, index)=>{
 
-                let num_humans_le_index = 0 // number of humans in lanes less than or equal to index
-                game_state.player_race_positions.forEach((pos)=>{
-                    if(pos<=index) num_humans_le_index++
-                })
+                let real_lane = -1 // actual lane of the bot
+                let bot_counter = 0 // count number of bots seen
+                // index+1 is the number of bots we need to see before stopping
+                while(bot_counter < index+1){
+                    real_lane++
 
-                let race_position = index + num_humans_le_index // think about it
+                    if(!game_state.player_race_positions.includes(real_lane)){
+                        // currently, real_lane is for a bot
+                        bot_counter++
+                    }
+                    
+                }
 
-                if(game_state.racers_shot.includes(race_position)){
+                // let num_humans_le_index = 0 // number of humans in lanes less than or equal to index
+                // game_state.player_race_positions.forEach((pos)=>{
+                //     if(pos<=index) num_humans_le_index++
+                // })
+                // let race_position = index + num_humans_le_index // think about it
+
+                if(game_state.racers_shot.includes(real_lane)){
                     // racer has been shot
                     return val
                 }
                 else{
-                    // raver has not been shot
+                    // racer has not been shot
                     let movement_state = game_state.bot_movement_state[index]
                     delta_pos = get_delta_position(movement_state)
                     return val + movement_state
