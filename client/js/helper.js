@@ -2,7 +2,7 @@ var socket = io.connect();
 
 //////////////////////////////////
 // GAME SETTINGS
-const tickrate = 5
+const tickrate = 10
 const ticktime = 1000/tickrate
 const canvas_width = 640
 const canvas_height = 480
