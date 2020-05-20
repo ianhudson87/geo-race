@@ -2,17 +2,29 @@ var socket = io.connect();
 
 //////////////////////////////////
 // GAME SETTINGS
-const tickrate = 0.5
+const tickrate = 2
 const ticktime = 1000/tickrate
 const canvas_width = 640
 const canvas_height = 480
-const racer_color = "#00FF00"
+
+const movement_stop_state = 0 // state for not moving
+const movement_walk_state = 1 // state for not moving
+const movement_run_state = 2 // state for not moving
+
+const xhair_up_act = 0 // action type for moving xhair up
+const xhair_down_act = 1 // action type for moving xhair down
+const xhair_shoot_act = 2 // action type for shooting
+
+const racer_alive_color = "#00FF00"
+const racer_dead_color = "#FF0000"
 const player_colors = ["#FF0000", "#0000FF", "#FFFF00", "#00FFFF", "#000000"]
 
 //////////////////////////////////
 // GAME DATA
 var num_racers = 0 // will change when game starts
-var game_state = {}
+var game_state = {} // USE THIS TO KEEP TRACK OF ALL GAME DATA. Same as server game_state
+var race_win_position = 0 // change when game starts
+var ordered_racer_pos = [] // racer positions in order
 var one_key_down = false // keeps track if a key is down or not
 
 
@@ -84,6 +96,7 @@ socket.on("start_game_res", (data)=>{
     if(data.success){
         num_racers = data.num_racers
         racer_spacing = canvas_height/(num_racers+1)
+        race_win_position = data.race_win_position
         alert(data.msg)
     }
     else{
@@ -104,6 +117,36 @@ socket.on("update_users_display", (data)=>{
 socket.on("update_game_state", (data)=>{
     game_state = data.game_state
     console.log(data.game_state)
+
+    // order the racer positions based on how they are lined up
+    let bot_index = 0
+    for(let i=0; i<num_racers; i++){
+        if(game_state.player_race_positions.includes(i)){
+            // i is at position of human. use lookup table
+            player_positions_index = game_state.player_race_positions.indexOf(i) // index wanted for player_positions array
+
+            let racer_position = game_state.player_positions[player_positions_index]
+            ordered_racer_pos[i] = racer_position
+
+        }
+        else{
+            // i is at position of bot. use bot_index counter
+
+            let racer_position = game_state.bot_positions[bot_index]
+            ordered_racer_pos[i] = racer_position
+
+            bot_index++
+        }
+    }
+
+})
+
+// handler for when game is over
+socket.on("game_over", (data)=>{
+    if(data.success){
+        alert("Game Over. Winner: " + data.winner_name)
+        console.log(data)
+    }
 })
 
 // update display
@@ -118,26 +161,32 @@ $(document).on("keyup keydown", (e) => {
             case 90:
                 // z down
                 socket.emit("change_movement", {
-                    move_type: 1
+                    move_type: movement_walk_state // walk
                 })
                 break
             case 88:
                 // x down
                 socket.emit("change_movement", {
-                    move_type: 2
+                    move_type: movement_run_state // run
                 })
                 break
             case 79:
                 // o down
-                socket.emit("xhair_up")
+                socket.emit("xhair_action", {
+                    action_type: xhair_up_act // xhair up
+                })
                 break
             case 76:
                 // l down
-                socket.emit("xhair_down")
+                socket.emit("xhair_action", {
+                    action_type: xhair_down_act // xhair down
+                })
                 break
             case 13:
                 // enter down
-                socket.emit("shoot")
+                socket.emit("xhair_action", {
+                    action_type: xhair_shoot_act // xhair shoot
+                })
                 break
         }
 
@@ -152,7 +201,7 @@ $(document).on("keyup keydown", (e) => {
             case 88:
                 // x up
                 socket.emit("change_movement", {
-                    move_type: 0
+                    move_type: movement_stop_state // stop walk/run
                 })
                 break
         }
@@ -178,41 +227,41 @@ function update_display(){
     ctx.clearRect(0, 0, canvas_width, canvas_height);
 
     // draw racers
-    draw_racers()
+    display_racers()
 
     // draw crosshairs
-    draw_xhairs()
+    display_xhairs()
+
+    // draw finish line
 }
 
-function draw_racers(){
-    let bot_index = 0
-    let human_index = 0
-    for(let i=0; i<num_racers; i++){
-        if(game_state.player_race_positions.includes(i)){
-            // i is at position of human
+function display_racers(){
+    // go through each racer and display them
+    ordered_racer_pos.forEach((racer_pos, racer_index) => {
+        // determine if racer is alive
+        racer_color = game_state.racers_shot.includes(racer_index) ? racer_dead_color : racer_alive_color
 
-            let race_position=game_state.player_positions[human_index]
-            draw_square(race_position, racer_spacing*(i+0.5), racer_size, racer_color)
-            draw_text(race_position, racer_spacing*(i+0.5), i.toString(), racer_color)
+        draw_square(racer_pos, racer_spacing*(racer_index+0.5), racer_size, racer_color)
+    })
+}
 
-            human_index++
-        }
-        else{
-            // i is at position of bot
-
-            let race_position=game_state.bot_positions[bot_index]
-            draw_square(race_position, racer_spacing*(i+0.5), racer_size, racer_color)
-            draw_text(race_position, racer_spacing*(i+0.5), i.toString(), racer_color)
-
-            bot_index++
-        }
+function display_xhairs(){
+    if(!game_state.player_crosshair){
+        // game not started yet
+        return
     }
+    game_state.player_crosshair.forEach((xhair_pos, player_index) => {
+        // xhair_pos is the index of the racer that xhair is on
+        // player_index is the index of the player with the xhair
+        let racer_pos = ordered_racer_pos[xhair_pos]
+        let xhair_color = player_colors[player_index]
+        draw_circle(racer_pos, racer_spacing*(xhair_pos+0.5), 10, xhair_color)
+        
+    })
 }
 
-function draw_xhairs(){
 
-}
-
+// shape drawing
 function draw_square(center_x, center_y, side_length, color){
     let xcoord = center_x-side_length*0.5
     let ycoord = center_y-side_length*0.5
@@ -224,4 +273,11 @@ function draw_square(center_x, center_y, side_length, color){
 function draw_text(x_position, y_position, text, color){
     ctx.fillStyle = color
     ctx.fillText(text, x_position, y_position)
+}
+
+function draw_circle(center_x, center_y, radius, color){
+    ctx.strokeStyle = color
+    ctx.beginPath()
+    ctx.arc(center_x, center_y, radius, 0, 2 * Math.PI)
+    ctx.stroke()
 }
