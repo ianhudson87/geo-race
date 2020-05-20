@@ -6,7 +6,7 @@ var path = require('path');
 var port = process.env.PORT || 3000;
 
 // global variables
-const tickrate = 5
+const tickrate = 10
 const ticktime = 1000/tickrate
 const num_racers = 10 // number of bots+humans
 const bot_movement_toggle_chance = 0.1 // chance that bot changes walking->stop or vice versa each tick
